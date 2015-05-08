@@ -1,45 +1,36 @@
 package com.christophbonitz.concurrent;
 
-import com.google.caliper.Param;
-import com.google.caliper.api.BeforeRep;
-import com.google.caliper.api.Macrobenchmark;
-import com.google.caliper.runner.CaliperMain;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import com.google.common.base.Stopwatch;
+
 
 public class Main {
-	@Param({ "1" }) private int baseActorCount;
-	@Param({ "1000"}) private int actionsPerActor;
 	
-	public static void main(String[] args) {
-		CaliperMain.main(Main.class, args);
+	public static void main(String[] args) throws InterruptedException {
+		int[] actionsPerActor = { 10000, 100000, 1000000 };
+		ExecutorService pool = Executors.newCachedThreadPool();
+		for (int i = 0; i < actionsPerActor.length; i++) {
+		for (int actors = 1; actors <= 10; actors++) {
+				long ai = time(actors, actionsPerActor[i], pool, new AtomicIntegerCounter());
+				long lockFree = time(actors, actionsPerActor[i], pool, new LockFreeCounter());
+				long intrinsic = time(actors, actionsPerActor[i], pool, new IntrinsicLockCounter());
+				long readwrite = time(actors, actionsPerActor[i], pool, new ReadWriteLockCounter());
+				System.out.println(String.format("%d %d %d %d %d %d", actors, actionsPerActor[i], ai, lockFree, intrinsic, readwrite));
+			}
+		}
+		pool.shutdownNow();
+		pool.awaitTermination(10, TimeUnit.SECONDS);
 	}
-	
-	@BeforeRep
-	public void BeforeRep() {
-		System.out.println("Here we go again");
-	}
-	
-	@Macrobenchmark
-	public void timeLockFreeBenchmark() {
-		System.out.println("Starting");
-		Counter counter = new LockFreeCounter();
-		CounterExecutor counterExecutor = new CounterExecutor(counter, 2*baseActorCount, baseActorCount, baseActorCount, actionsPerActor);
+
+	private static long time(int baseActorCount, int actionsPerActor,
+			ExecutorService pool, Counter counter) {
+		Stopwatch sw = Stopwatch.createStarted();
+		CounterExecutor counterExecutor = new CounterExecutor(pool, counter, 10*baseActorCount, baseActorCount, baseActorCount, actionsPerActor);
 		counterExecutor.run();
-		System.out.println("Finished");
-	}
-	
-	@Macrobenchmark
-	public void timeIntrinsicLockBenchmark() {
-		System.out.println("Starting");
-		Counter counter = new IntrinsicLockCounter();
-		new CounterExecutor(counter, 2*baseActorCount, baseActorCount, baseActorCount, actionsPerActor).run();
-		System.out.println("Finished");
-	}
-	
-	@Macrobenchmark
-	public void timeRreadWriteLockBenchmark() {
-		System.out.println("Starting");
-		Counter counter = new ReadWriteLockCounter();
-		new CounterExecutor(counter, 2*baseActorCount, baseActorCount, baseActorCount, actionsPerActor).run();
-		System.out.println("Finished");
+		sw.stop();
+		return sw.elapsed(TimeUnit.MILLISECONDS);
 	}
 }

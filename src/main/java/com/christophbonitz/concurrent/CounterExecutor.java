@@ -2,8 +2,6 @@ package com.christophbonitz.concurrent;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class CounterExecutor implements Runnable {
 	private final int readers;
@@ -11,14 +9,16 @@ public class CounterExecutor implements Runnable {
 	private final int decrementors;
 	private final int actionsPerActor;
 	private final Counter counter;
+	private ExecutorService executorService;
 	
 	public CounterExecutor(
+			ExecutorService executorService,
 			Counter counter,
 			int readers, 
 			int incrementors, 
 			int decrementors,
 			int actionsPerActor) {
-		
+		this.executorService = executorService;
 		this.counter = counter;
 		this.readers = readers;
 		this.incrementors = incrementors;
@@ -28,21 +28,19 @@ public class CounterExecutor implements Runnable {
 
 	@Override
 	public void run() {
-		System.out.println("Starting " + this);
-		ExecutorService pool = Executors.newCachedThreadPool();
 		int totalActors = readers + incrementors + decrementors;
 		CountDownLatch startLatch = new CountDownLatch(1);
 		CountDownLatch stopLatch = new CountDownLatch(totalActors);
 		for (int i =  0; i < incrementors; i++) {
-			pool.execute(new LatchOperatedRunnableWrapper(
+			executorService.execute(new LatchOperatedRunnableWrapper(
 					new Incrementor(counter, actionsPerActor), startLatch, stopLatch));
 		}
 		for (int i =  0; i < decrementors; i++) {
-			pool.execute(new LatchOperatedRunnableWrapper(
+			executorService.execute(new LatchOperatedRunnableWrapper(
 					new Decrementor(counter, actionsPerActor), startLatch, stopLatch));
 		}
 		for (int i =  0; i < readers; i++) {
-			pool.execute(new LatchOperatedRunnableWrapper(
+			executorService.execute(new LatchOperatedRunnableWrapper(
 					new Reader(counter, actionsPerActor), startLatch, stopLatch));
 		}
 		startLatch.countDown();
@@ -51,13 +49,6 @@ public class CounterExecutor implements Runnable {
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-		pool.shutdownNow();
-		try {
-			pool.awaitTermination(10, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-		System.out.println("Done: " + this);
 	}
 	
 	public class Incrementor implements Runnable {
