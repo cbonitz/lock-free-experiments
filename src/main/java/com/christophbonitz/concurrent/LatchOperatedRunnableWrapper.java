@@ -5,6 +5,9 @@ package com.christophbonitz.concurrent;
 
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * Runnable implementation that waits for startLatch, runs a delegate runnable, and counts down stopLatch when done.
+ */
 public class LatchOperatedRunnableWrapper implements Runnable {
 	private final Runnable delegate;
 	private final CountDownLatch startLatch;
@@ -12,7 +15,6 @@ public class LatchOperatedRunnableWrapper implements Runnable {
 
 	public LatchOperatedRunnableWrapper(Runnable delegate,
 			CountDownLatch startLatch, CountDownLatch stopLatch) {
-		super();
 		this.delegate = delegate;
 		this.startLatch = startLatch;
 		this.stopLatch = stopLatch;

@@ -5,6 +5,9 @@ import java.util.concurrent.ExecutorService;
 
 import com.christophbonitz.concurrent.interfaces.Counter;
 
+/**
+ * Concurrently runs incrementors, decrementors and readers on a counter implementation, mediated by latches
+ */
 public class CounterExecutor implements Runnable {
 	private final int readers;
 	private final int incrementors;
