@@ -13,12 +13,13 @@ public class Main {
 		int[] actionsPerActor = { 10000, 100000, 1000000 };
 		ExecutorService pool = Executors.newCachedThreadPool();
 		for (int i = 0; i < actionsPerActor.length; i++) {
-		for (int actors = 1; actors <= 10; actors++) {
-				long ai = time(actors, actionsPerActor[i], pool, new AtomicIntegerCounter());
-				long lockFree = time(actors, actionsPerActor[i], pool, new LockFreeCounter());
-				long intrinsic = time(actors, actionsPerActor[i], pool, new IntrinsicLockCounter());
-				long readwrite = time(actors, actionsPerActor[i], pool, new ReadWriteLockCounter());
-				System.out.println(String.format("%d %d %d %d %d %d", actors, actionsPerActor[i], ai, lockFree, intrinsic, readwrite));
+		for (int baseActorCount = 1; baseActorCount <= 10; baseActorCount++) {
+				long ai = time(baseActorCount, actionsPerActor[i], pool, new AtomicIntegerCounter());
+				long lockFree = time(baseActorCount, actionsPerActor[i], pool, new LockFreeCounter());
+				long intrinsic = time(baseActorCount, actionsPerActor[i], pool, new IntrinsicLockCounter());
+				long readwrite = time(baseActorCount, actionsPerActor[i], pool, new ReadWriteLockCounter());
+				System.out.printf("%d %d %d %d %d %d\n", 
+						baseActorCount, actionsPerActor[i], ai, lockFree, intrinsic, readwrite);
 			}
 		}
 		pool.shutdownNow();

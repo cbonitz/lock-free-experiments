@@ -1,3 +1,6 @@
+/* Copyright 2015 Christoph Bonitz
+ * License: Simplified BSD License
+ */
 package com.christophbonitz.concurrent;
 
 import java.util.concurrent.atomic.AtomicInteger;
