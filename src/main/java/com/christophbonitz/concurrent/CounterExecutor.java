@@ -3,6 +3,8 @@ package com.christophbonitz.concurrent;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
+import com.christophbonitz.concurrent.interfaces.Counter;
+
 public class CounterExecutor implements Runnable {
 	private final int readers;
 	private final int incrementors;

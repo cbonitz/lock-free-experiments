@@ -7,6 +7,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.christophbonitz.concurrent.impl.AtomicIntegerCounter;
+import com.christophbonitz.concurrent.impl.IntrinsicLockCounter;
+import com.christophbonitz.concurrent.impl.LockFreeCounter;
+import com.christophbonitz.concurrent.impl.ReadWriteLockCounter;
+import com.christophbonitz.concurrent.interfaces.Counter;
 import com.google.common.base.Stopwatch;
 
 
@@ -29,10 +34,24 @@ public class Main {
 		pool.awaitTermination(10, TimeUnit.SECONDS);
 	}
 
+	/**
+	 * Run with baseActorCount incrementors and decremntors, as well as 10*baseActorCount readers.
+	 * Each will perform actionsPerActor actions.
+	 * @param baseActorCount
+	 * @param actionsPerActor
+	 * @param pool
+	 * @param counter
+	 * @return time used in milliseconds.
+	 */
 	private static long time(int baseActorCount, int actionsPerActor,
 			ExecutorService pool, Counter counter) {
 		Stopwatch sw = Stopwatch.createStarted();
-		CounterExecutor counterExecutor = new CounterExecutor(pool, counter, 10*baseActorCount, baseActorCount, baseActorCount, actionsPerActor);
+		CounterExecutor counterExecutor = new CounterExecutor(
+				pool, 
+				counter, 
+				10*baseActorCount, 
+				baseActorCount, 
+				baseActorCount, actionsPerActor);
 		counterExecutor.run();
 		sw.stop();
 		return sw.elapsed(TimeUnit.MILLISECONDS);
